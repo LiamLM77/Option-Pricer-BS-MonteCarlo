@@ -50,24 +50,31 @@ def pricer_option(S, K, T, r, sigma):
 
     return call, put
 
-def monte_carlo_option(S, K, T, r, sigma, n_sims=100000, type_option='call'): #Price d'une option avec une simulation Monte Carlo a l'aide du Mouvement Brownien Géométrique
-    np.random.seed(42) #Pour pouvoir reproduire les résultats
+def monte_carlo_option(S, K, T, r, sigma, n_sims=100000, type_option='call'): # Price d'une option avec une simulation Monte Carlo a l'aide du Mouvement Brownien Géométrique
+    np.random.seed(42) # Pour pouvoir reproduire les résultats
 
-    #Tirage aléatoire avec une distribution normale des variables Z
+    # Tirage aléatoire avec une distribution normale des variables Z
     Z = np.random.standard_normal(n_sims)
 
-    #Simulation du prix à maturité (S_T)
-    S_T = S * np.exp((r - 0.5 * sigma**2) * T + sigma * np.sqrt(T) * Z)  #Formule du Mouvement Brownien Géométrique
+    # Simulation du prix à maturité (S_T)
+    # Formule du Mouvement Brownien Géométrique
+    S_T = S * np.exp((r - 0.5 * sigma**2) * T + sigma * np.sqrt(T) * Z) 
 
-    #Calcul du payoff à maturité (Gain)
+    # Calcul du payoff à maturité (Gain)
     if type_option == 'call':
-        payoffs = np.maximum(S_T - K, 0) #Payoff du call
+        payoffs = np.maximum(S_T - K, 0) # Payoff du call
     else:
-        payoffs = np.maximum(K - S_T, 0) #Payoff du put
-    #Actualisation des payoffs
-    prix = np.exp(-r*T) * np.mean(payoffs)
-    return prix
+        payoffs = np.maximum(K - S_T, 0) # Payoff du put
+    
+    # Actualisation des payoffs
+    prix_mc = np.exp(-r*T) * np.mean(payoffs)
+    
+    # Calcul de la précision
+    # Correction ici : on actualise avec -r*T pour avoir l'écart type du prix présent
+    ecart_type = np.std(payoffs * np.exp(-r*T)) 
+    erreur_standard = ecart_type / np.sqrt(n_sims) # Erreur standard (loi des grands nombres)
 
+    return prix_mc, erreur_standard
 """
 Exécution des calculs
 """
@@ -83,11 +90,16 @@ prix_call, prix_put = pricer_option(S, K, T, r, sigma)
 print(f"Prix théorique du Call Européen: {prix_call:.2f} EUR")
 print(f"Prix théorique du Put Européen: {prix_put:.2f} EUR")
 
-#Appel de la fonction Monte Carlo (Pour comparer)
-prix_call_mc = monte_carlo_option(S, K, T, r, sigma, type_option='call')
-print(f"Prix Monte Carlo du Call: {prix_call_mc:.2f} EUR")
 
+# Appel de la fonction Monte Carlo
+prix_mc, erreur_standard = monte_carlo_option(S, K, T, r, sigma, n_sims=100000)
 
+# Intervalle de confiance à 95% (environ 1.96 fois l'erreur standard)
+confiance_95 = 1.96 * erreur_standard
+
+print(f"Prix Monte Carlo : {prix_mc:.4f} EUR")
+print(f"Précision (95%)  : +/- {confiance_95:.4f} EUR")
+print(f"Intervalle       : [{prix_mc - confiance_95:.4f} ; {prix_mc + confiance_95:.4f}]")
 """
 Visualisation des graphiques
 
@@ -142,4 +154,30 @@ plt.ylabel("Prix de l'action")
 plt.legend(loc='upper left')
 
 plt.tight_layout() 
+plt.show()
+
+#--- Graphique 3 : Convergence Monte Carlo vs Black-Scholes ---
+
+# Paramètres de simulation pour la convergence
+N_simulations_visu = 50000  #Nombre total de simulations pour la visualisation
+
+
+# Simulation de la convergence
+np.random.seed(42)
+Z = np.random.standard_normal(N_simulations_visu) # Utilise la variable
+S_T = S * np.exp((r - 0.5 * sigma**2) * T + sigma * np.sqrt(T) * Z)
+payoffs = np.maximum(S_T - K, 0)
+
+# Calcul de la moyenne progressive
+# Correction importante : np.arange doit aller jusqu'à N + 1 pour avoir la même taille que payoffs
+prix_cumules = np.exp(-r*T) * np.cumsum(payoffs) / np.arange(1, N_simulations_visu + 1)
+
+plt.plot(prix_cumules, color='blue', lw=1.5, label='Prix Monte Carlo')
+plt.axhline(prix_call, color='red', linestyle='--', lw=2, label=f'Prix Théorique BS ({prix_call:.2f}€)')
+
+plt.title(f"Convergence du prix Monte Carlo vers Black-Scholes ({N_simulations_visu} simulations)")
+plt.xlabel("Nombre de simulations")
+plt.ylabel("Prix estimé du Call")
+plt.legend()
+plt.grid(True)
 plt.show()
