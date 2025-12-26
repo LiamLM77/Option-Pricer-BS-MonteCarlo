@@ -1,7 +1,7 @@
 **Pricer d'Option Black-Scholes & Monte Carlo (Python & Excel)**
 Ce projet est un calculateur d'options européennes (Call & Put) basé sur le modèle de Black-Scholes-Merton .
 
-Il compare l'approche analytique classique avec une Simulation de Monte Carlo. 
+Il compare l'approche analytique classique avec une Simulation de Monte Carlo et simule désormais une stratégie de couverture dynamique (Delta Hedging). 
 
 Il inclut une implémentation Python connectée aux marchés réels et un prototype Excel de validation.
 
@@ -17,25 +17,39 @@ Visualisation : Tracé du profil de prix (Payoff) avec matplotlib.
 
 Approche Numérique : Développement d'un moteur de simulation Monte Carlo (Mouvement Brownien) pour valider la convergence.
 
+Gestion des Risques (Nouveau V2) : Simulation d'une stratégie de Delta Hedging pour observer l'efficacité de la couverture face aux mouvements de marché.
+
 **Contenu du Repository**
 1. Le Script Python (pricer_option.py)
 Le cœur du projet. Il permet de :
+
 Télécharger l'historique d'une action (ex: TotalEnergies).
+
 Calculer la volatilité annualisée.
+
 Pricer un Call et un Put pour un Strike donné.
+
 Pricer un Call et un Put via Monte Carlo (100 000 simulations).
+
 Générer un tableau de bord visuel (Comparaison Théorie vs Simulation).
+
+Simuler un Delta Hedging sur 1 an et calculer le PnL final.
 
 2. Le Prototype Excel (Pricer_BlackScholes_Excel.xlsx)
 Avant l'automatisation, ce fichier a servi à :
+
 Poser les équations manuellement.
+
 Vérifier la cohérence des résultats du script Python (Benchmark).
+
 Visualiser l'impact des taux d'intérêt sur la parité Call-Put.
 
-**Technologies utilisées**
+***Technologies utilisées***
 Langage : Python 3.x
 
-Librairies :yfinance : Données financières.
+**Librairies :**
+
+yfinance : Données financières.
 
 numpy : Calcul matriciel et mathématique.
 
@@ -77,12 +91,25 @@ Volatilité historique (1 an) : ~21.5%
 | **Monte Carlo** (Simulé) | **3.89 €** |
 | *Convergence* | *Validée* |
 
-Visualisation : Le script génère deux graphiques :
+2. Validation du Modèle (Nouveautés V2)
+Convergence Monte Carlo : Le graphique de convergence montre que le prix simulé se stabilise vers le prix théorique à mesure que le nombre de simulations augmente (Loi des Grands Nombres).
 
-Gauche : Le profil de prix théorique (Black-Scholes).
+Performance du Delta Hedging : Sur une simulation de 252 jours de trading, le robot a rebalancé le portefeuille quotidiennement.
 
-Droite : La projection de 100 trajectoires aléatoires (Spaghetti Plot) montrant la distribution future des prix.
+PnL Final (Erreur de couverture) : ~0.01 €
 
+Résultat : La stratégie a permis de neutraliser quasi-totalement le risque.
+
+Visualisation
+Le script génère désormais 4 graphiques :
+
+Black-Scholes : Profil de prix théorique.
+
+Monte Carlo : Projection de 100 trajectoires aléatoires.
+
+Convergence : Preuve de stabilité du prix simulé.
+
+Hedging : Suivi dynamique du Delta et du PnL.
 **Disclaimer**
  Projet personnel réalisé en parallèle de mon Master Ingénierie Économique et Financière. À but pédagogique uniquement.
 
